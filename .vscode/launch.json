@@ -1,0 +1,85 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Excel Desktop",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start",
+        "desktop"
+      ],
+      "args": [
+        "--",
+        "--app",
+        "excel"
+      ]
+    },
+    {
+      "name": "PowerPoint Desktop",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start",
+        "desktop"
+      ],
+      "args": [
+        "--",
+        "--app",
+        "powerpoint"
+      ]
+    },
+    {
+      "name": "Word Desktop",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start",
+        "desktop"
+      ],
+      "args": [
+        "--",
+        "--app",
+        "word"
+      ]
+    },
+    {
+      "name": "Office Online (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      // To debug your Add-in:
+      // 1. When prompted, enter the url (share link) to an Office Online document.
+      // 2. Sideload your Add-in. https://docs.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing
+      "url": "https://ardumatteo-my.sharepoint.com/:x:/r/personal/matt_ardumatteo_onmicrosoft_com/_layouts/15/doc2.aspx?sourcedoc=%7BEB74D96D-54B9-4884-94C3-18E0069DB207%7D&file=Book.xlsx&action=editnew&mobileredirect=true&wdNewAndOpenCt=1580220104864&wdPreviousSession=daf423ce-c6a2-4eec-87b2-71a5bd26fd3c&wdOrigin=OFFICECOM-WEB.START.NEW&cid=bd59cd42-d4fd-4b0e-8aa6-96c068a5ba13",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "Debug: Web"
+    },
+    {
+      "name": "Office Online (Edge)",
+      "type": "edge",
+      "request": "launch",
+      // To debug your Add-in:
+      // 1. When prompted, enter the url (share link) to an Office Online document.
+      // 2. Sideload your Add-in. https://docs.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing
+      "url": "${input:officeOnlineDocumentUrl}",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "Debug: Web"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "officeOnlineDocumentUrl",
+      "type": "promptString",
+      "description": "Please enter the url for the Office Online document."
+    }
+  ]
+}
