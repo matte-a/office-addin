@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button, ButtonType, Announced, TagPicker, ITag } from "office-ui-fabric-react";
+import { Button, ButtonType, Announced, TagPicker, IPersonaProps, NormalPeoplePicker, IPersonaProps } from "office-ui-fabric-react";
 // import Header from "./Header";
 import HeroList, { HeroListItem } from "./HeroList";
 import Progress from "./Progress";
@@ -30,6 +30,7 @@ export interface AppState {
   error: string;
   userList: any[];
   numberOfSuggestions: number;
+  selectedUsers: IPersonaProps[];
 }
 
 export default class App extends React.Component<AppProps, AppState> {
@@ -39,11 +40,13 @@ export default class App extends React.Component<AppProps, AppState> {
       listItems: [],
       error: "",
       userList: [],
-      numberOfSuggestions: 0
+      numberOfSuggestions: 0,
+      selectedUsers: undefined
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    var me = this;
     this.setState({
       listItems: [
         {
@@ -60,6 +63,30 @@ export default class App extends React.Component<AppProps, AppState> {
         }
       ]
     });
+    Excel.run(async context => {
+      const sheet = context.workbook.worksheets.getActiveWorksheet();
+      var selectedUsers: IPersonaProps[] = [];
+      var table = sheet.tables.getItemOrNullObject("UsersTable");
+      await context.sync();
+      if (!table.isNullObject) {
+        var tableRows = table.rows;
+
+        await tableRows.load("items");
+        await context.sync();
+        if (tableRows) {
+          for (var i = 0; i < tableRows.items.length; i++) {
+            selectedUsers.push({
+              itemID: tableRows.items[i].values[0][1],
+              text: tableRows.items[i].values[0][0]
+            })
+          }
+        }
+      }
+
+
+      me.setState({ selectedUsers: selectedUsers });
+    })
+
     msalApp.acquireTokenSilent(GRAPH_REQUESTS.LOGIN)
       .catch((err) => {
         switch (err.errorCode) {
@@ -126,18 +153,20 @@ export default class App extends React.Component<AppProps, AppState> {
       <div className="ms-welcome">
         {/* <Header logo="assets/logo-filled.png" title={this.props.title} message="Welcome" /> */}
         <HeroList message="Discover what Office Add-ins can do for you today!" items={[]}>
-          <TagPicker
+          {this.state.selectedUsers != undefined && <NormalPeoplePicker
             onResolveSuggestions={this._onFilterChanged}
             onItemSelected={this._onSelectedUser}
             getTextFromItem={this._getTextFromItem}
             pickerSuggestionsProps={{
-              suggestionsHeaderText: 'Suggested Tags',
-              noResultsFoundText: 'No Color Tags Found' // this alert handles the case when there are no suggestions available
+              suggestionsHeaderText: 'Suggested People',
+              noResultsFoundText: 'No People Found', // this alert handles the case when there are no suggestions available,
             }}
             inputProps={{
-              'aria-label': 'Tag Picker'
+              'aria-label': 'People Picker'
             }}
-          />
+            onChange={this._onRemoveUser}
+            defaultSelectedItems={this.state.selectedUsers}
+          />}
           {this.state.numberOfSuggestions > 0 &&
             < Announced message={`${this.state.numberOfSuggestions} result`}></Announced>
           }
@@ -155,34 +184,65 @@ export default class App extends React.Component<AppProps, AppState> {
 
     );
   }
-  private _onSelectedUser = async (selected: ITag) => {
+  private _onSelectedUser = async (selected: IPersonaProps) => {
 
-    this.updateExcel(selected as User);
+    this.updateTable(selected as User);
+    return selected;
+  }
+  public _onRemoveUser = (selected: IPersonaProps[]) => {
+    this._removeUserFromTable(selected);
     return selected;
   }
 
-  private updateExcel = async (user: User) => {
+  private _removeUserFromTable = async (users: IPersonaProps[]) => {
+    await Excel.run(async context => {
+      var table = context.workbook.worksheets.getActiveWorksheet().tables.getItemOrNullObject("UsersTable");
+      await table.rows.load("items");
+      await context.sync();
+      // var deletedRow = table.rows.items.findIndex((val) => val.values[0][2] == user.key)
+      var indexes: number[] = []
+      table.rows.items.forEach((row, i) => {
+        var index = users.findIndex((val) => row.values[0][1] == val.itemID)
+        if (index == -1)
+          indexes.push(i);
+
+      });
+      indexes.forEach(index => {
+        table.rows.getItemAt(index).delete();
+      });
+      // .filter((val, i) => val.values[i][1] == user.key)
+      await context.sync();
+
+    })
+  }
+
+  private updateTable = async (user: User) => {
     await Excel.run(async context => {
       /**
        * Insert your Excel code here
        */
       const sheet = context.workbook.worksheets.getActiveWorksheet();
 
-      var expensesTable = sheet.tables.add("A1:D1", true /*hasHeaders*/);
-      expensesTable.name = "UsersTable";
-      expensesTable.getHeaderRowRange().values = [["Display Name", "Id", "email", "Office Location"]];
-      expensesTable.rows.add(null, [[user.displayName, user.id, user.mail, user.officeLocation]]);
+      var table = sheet.tables.getItemOrNullObject("UsersTable");
+      await context.sync();
+      if (table.isNullObject) {
+        table = sheet.tables.add("A1:D1", true /*hasHeaders*/);
+        table.name = "UsersTable";
+        table.getHeaderRowRange().values = [["Display Name", "Id", "email", "Office Location"]];
+      }
+
+      table.rows.add(null, [[user.displayName, user.id, user.mail, user.officeLocation]]);
 
       await context.sync();
       // console.log(`The range address was ${range.address}.`);
     });
   }
 
-  private _getTextFromItem = (item: ITag): string => {
-    return item.name;
+  private _getTextFromItem = (item: IPersonaProps): string => {
+    return item.text;
   };
 
-  private _onFilterChanged = async (filterText: string, selectedTags: ITag[]) => {
+  private _onFilterChanged = async (filterText: string, selectedTags: IPersonaProps[]) => {
     // if (filterText && this.state.emptyInput) {
     //   this.setState({ emptyInput: false });
     // } else if (!filterText && !this.state.emptyInput) {
@@ -201,11 +261,11 @@ export default class App extends React.Component<AppProps, AppState> {
           this.setState({ numberOfSuggestions: users.value.length });
         }
 
-        return users.value.map((u) => {
+        return users.value.map<IPersonaProps>((u) => {
           return {
             ...u,
-            name: u.displayName,
-            key: u.id
+            text: u.displayName,
+            itemID: u.id
           }
         })
       });
