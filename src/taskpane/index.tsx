@@ -9,13 +9,13 @@ import * as ReactDOM from "react-dom";
 initializeIcons();
 
 let isOfficeInitialized = false;
-
+let host = undefined;
 const title = "Contoso Task Pane Add-in";
 
-const render = Component => {
+const render = (Component) => {
   ReactDOM.render(
     <AppContainer>
-      <Component title={title} isOfficeInitialized={isOfficeInitialized} />
+      <Component host={host} title={title} isOfficeInitialized={isOfficeInitialized} />
     </AppContainer>,
     document.getElementById("container")
   );
@@ -24,6 +24,7 @@ const render = Component => {
 /* Render application after Office initializes */
 Office.initialize = () => {
   isOfficeInitialized = true;
+  host = Office.context.host;
   render(App);
 };
 
