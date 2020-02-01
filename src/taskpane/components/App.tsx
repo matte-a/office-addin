@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button, ButtonType, Announced, TagPicker, IPersonaProps, NormalPeoplePicker, IPersonaProps } from "office-ui-fabric-react";
+import { Button, ButtonType, Announced, IPersonaProps, NormalPeoplePicker } from "office-ui-fabric-react";
 // import Header from "./Header";
 import HeroList, { HeroListItem } from "./HeroList";
 import Progress from "./Progress";
@@ -76,6 +76,7 @@ export default class App extends React.Component<AppProps, AppState> {
         if (tableRows) {
           for (var i = 0; i < tableRows.items.length; i++) {
             selectedUsers.push({
+              imageUrl: `https://outlook.office.com/owa/service.svc/s/GetPersonaPhoto?email=${tableRows.items[i].values[0][2]}&UA=0&size=HR64x64&sc=1538493608488`,
               itemID: tableRows.items[i].values[0][1],
               text: tableRows.items[i].values[0][0]
             })
@@ -115,7 +116,7 @@ export default class App extends React.Component<AppProps, AppState> {
 
       }
       )
-      .then((val) => console.log(val))
+    // .then((val) => console.log(val))
   }
 
   click = async () => {
@@ -160,6 +161,7 @@ export default class App extends React.Component<AppProps, AppState> {
             pickerSuggestionsProps={{
               suggestionsHeaderText: 'Suggested People',
               noResultsFoundText: 'No People Found', // this alert handles the case when there are no suggestions available,
+
             }}
             inputProps={{
               'aria-label': 'People Picker'
@@ -248,7 +250,6 @@ export default class App extends React.Component<AppProps, AppState> {
     // } else if (!filterText && !this.state.emptyInput) {
     //   this.setState({ emptyInput: true });
     // }
-    selectedTags[0]
     const options = new MSALAuthenticationProviderOptions(GRAPH_REQUESTS.LOGIN.scopes);
     const authProvider = new ImplicitMSALAuthenticationProvider(msalApp, options);
 
@@ -264,6 +265,7 @@ export default class App extends React.Component<AppProps, AppState> {
         return users.value.map<IPersonaProps>((u) => {
           return {
             ...u,
+            imageUrl: `https://outlook.office.com/owa/service.svc/s/GetPersonaPhoto?email=${u.userPrincipalName}&UA=0&size=HR64x64&sc=1538493608488`,
             text: u.displayName,
             itemID: u.id
           }
