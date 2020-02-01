@@ -64,9 +64,11 @@ export default class App extends React.Component<AppProps, AppState> {
       ]
     });
     Excel.run(async context => {
-      const sheet = context.workbook.worksheets.getActiveWorksheet();
+      // const sheet = context.workbook.worksheets.getItem("Users");
+      // sheet.load("tables");
+      // await context.sync();
       var selectedUsers: IPersonaProps[] = [];
-      var table = sheet.tables.getItemOrNullObject("UsersTable");
+      var table = context.workbook.tables.getItemOrNullObject("UsersTable");
       await context.sync();
       if (!table.isNullObject) {
         var tableRows = table.rows;
@@ -198,7 +200,7 @@ export default class App extends React.Component<AppProps, AppState> {
 
   private _removeUserFromTable = async (users: IPersonaProps[]) => {
     await Excel.run(async context => {
-      var table = context.workbook.worksheets.getActiveWorksheet().tables.getItemOrNullObject("UsersTable");
+      var table = context.workbook.tables.getItemOrNullObject("UsersTable");
       await table.rows.load("items");
       await context.sync();
       // var deletedRow = table.rows.items.findIndex((val) => val.values[0][2] == user.key)
@@ -220,15 +222,13 @@ export default class App extends React.Component<AppProps, AppState> {
 
   private updateTable = async (user: User) => {
     await Excel.run(async context => {
-      /**
-       * Insert your Excel code here
-       */
-      const sheet = context.workbook.worksheets.getActiveWorksheet();
 
-      var table = sheet.tables.getItemOrNullObject("UsersTable");
+      // const sheet = context.workbook.worksheets.getItem("Users");
+      // sheet.load();
+      var table = context.workbook.tables.getItemOrNullObject("UsersTable");
       await context.sync();
       if (table.isNullObject) {
-        table = sheet.tables.add("A1:D1", true /*hasHeaders*/);
+        table = context.workbook.worksheets.getItem("Users").tables.add("A1:D1", true /*hasHeaders*/);
         table.name = "UsersTable";
         table.getHeaderRowRange().values = [["Display Name", "Id", "email", "Office Location"]];
       }
